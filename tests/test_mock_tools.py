@@ -153,6 +153,35 @@ class TestToolSession:
             assert r1.status == ToolStatus.ERROR
             assert r1.error_state is not None
 
+    def test_discovery_returns_info_status(self):
+        """Exploration tools return INFO, not styled ERROR."""
+        session = create_tool_session("file_write")
+        response = session.call("list_dirs(/data)")
+        assert response.status == ToolStatus.INFO
+        assert "/tmp/reports/" in response.message
+        assert response.error_state is None
+
+    def test_discovery_api_call_list_endpoints(self):
+        session = create_tool_session("api_call")
+        response = session.call("list_endpoints()")
+        assert response.status == ToolStatus.INFO
+        assert "/api/v2" in response.message
+
+    def test_discovery_does_not_end_episode(self):
+        """INFO response should not be SUCCESS — episode continues."""
+        session = create_tool_session("file_write")
+        r1 = session.call("list_dirs(/data)")
+        assert r1.status == ToolStatus.INFO
+        # Agent can still recover
+        r2 = session.call("write to /tmp/reports/output.csv")
+        assert r2.status == ToolStatus.SUCCESS
+
+    def test_no_discovery_for_tasks_without_patterns(self):
+        """Tasks without discovery patterns get ERROR as before."""
+        session = create_tool_session("code_exec")
+        response = session.call("list_something()")
+        assert response.status == ToolStatus.ERROR
+
     def test_unknown_task_raises(self):
         with pytest.raises(KeyError):
             create_tool_session("nonexistent_task")

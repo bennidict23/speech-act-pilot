@@ -114,6 +114,47 @@ def _strip_thought_prefix(text: str) -> str:
 # System prompt builder
 # ---------------------------------------------------------------------------
 
+def _extract_tool_name(action: str) -> str | None:
+    """Extract the tool name from an action string like 'tool_name(args)'.
+
+    Returns None if no recognizable tool call pattern is found.
+    """
+    match = re.match(r"\s*(\w+)\s*\(", action)
+    return match.group(1) if match else None
+
+
+def validate_tool(action: str, task: TaskScenario) -> str | None:
+    """Check if the action uses an available tool.
+
+    Returns None if valid, or an error message if invalid.
+    This message is neutral (identical across all styles).
+    """
+    tool_name = _extract_tool_name(action)
+    available = {t.name for t in task.tools}
+
+    if tool_name is not None and tool_name not in available:
+        tool_list = ", ".join(sorted(available))
+        return (
+            f"Unknown tool '{tool_name}'. "
+            f"Available tools: {tool_list}. "
+            f"Please use one of the available tools."
+        )
+
+    # If no tool call pattern detected, check if first word looks like
+    # a non-tool function (e.g., "return", "print")
+    if tool_name is None:
+        first_word = action.strip().split("(")[0].split()[0] if action.strip() else ""
+        if first_word and first_word not in available:
+            tool_list = ", ".join(sorted(available))
+            return (
+                f"Invalid action format. "
+                f"Available tools: {tool_list}. "
+                f"Use format: tool_name(arguments)"
+            )
+
+    return None
+
+
 def build_system_prompt(task: TaskScenario) -> str:
     """Build the ReAct system prompt for a task.
 
@@ -135,7 +176,12 @@ def build_system_prompt(task: TaskScenario) -> str:
         f"Available tools:\n"
         f"{tools_block}\n"
         "\n"
-        "Use this format for EVERY response:\n"
+        "RULES:\n"
+        "1. You may ONLY use the tools listed above. Do not use print, "
+        "return, or any other function.\n"
+        "2. If a tool call fails, try a DIFFERENT tool or different "
+        "arguments. Do not repeat the same failing call.\n"
+        "3. Use this format for EVERY response:\n"
         "\n"
         "Thought: <your reasoning about what to do next>\n"
         "Action: <tool_name>(<arguments>)\n"
@@ -243,14 +289,20 @@ def run_agent(
         else:
             action_type = ActionType.UNKNOWN
 
-        # Get tool response (only if we have an action)
-        if action:
+        # Validate tool name before passing to session
+        tool_error_msg = validate_tool(action, task) if action else None
+
+        # Get tool response (only if we have a valid action)
+        if action and tool_error_msg is None:
             tool_response = session.call(action)
         else:
             tool_response = None
 
         # Build observation for the agent
-        if tool_response is None:
+        if tool_error_msg is not None:
+            # Invalid tool — neutral guidance, not styled
+            observation = tool_error_msg
+        elif tool_response is None:
             observation = (
                 "No valid action was detected. "
                 "Please respond with the Thought/Action format."
@@ -258,6 +310,9 @@ def run_agent(
         elif tool_response.status == ToolStatus.SUCCESS:
             observation = tool_response.message
         elif tool_response.status == ToolStatus.EXHAUSTED:
+            observation = tool_response.message
+        elif tool_response.status == ToolStatus.INFO:
+            # Discovery response — neutral, not styled
             observation = tool_response.message
         else:
             # Error — re-render with the speech-act style
