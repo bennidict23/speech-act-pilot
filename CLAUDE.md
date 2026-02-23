@@ -44,6 +44,7 @@ change LLM agent recovery behavior?
 ```bash
 CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server \
     --model /E2M181-data/zhangcb/models/Qwen2.5-7B-Instruct \
+    --served-model-name Qwen2.5-7B-Instruct \
     --dtype auto \
     --max-model-len 4096 \
     --port 8001 \
