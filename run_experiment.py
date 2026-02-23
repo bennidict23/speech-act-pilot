@@ -22,7 +22,9 @@ from renderer import Phase, SpeechStyle
 
 logger = logging.getLogger(__name__)
 
-TASK_IDS: tuple[str, ...] = tuple(TASK_ERROR_STATES.keys())
+# Sorted for deterministic seed assignment (dict order is CPython 3.7+ but
+# explicit sort guards against future refactors of TASK_ERROR_STATES).
+TASK_IDS: tuple[str, ...] = tuple(sorted(TASK_ERROR_STATES.keys()))
 STYLES: tuple[SpeechStyle, ...] = tuple(SpeechStyle)
 RUNS_PER_CONDITION: int = 20
 
@@ -150,6 +152,9 @@ def run_b1_experiment(
     errors = 0
     start_time = time.time()
 
+    # NOTE: Fixed task→style→run order is acceptable for B1 (short runs,
+    # no KV-cache drift).  For B2, shuffle condition order to decorrelate
+    # style from wall-clock time.  See CC2 review L1.
     with open(output_path, "a") as f:
         for task_index, task_id in enumerate(TASK_IDS):
             if task_id not in tasks:
