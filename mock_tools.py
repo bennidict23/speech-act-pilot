@@ -140,6 +140,8 @@ _RECOVERY_PATTERNS: dict[str, list[str]] = {
     ],
     "code_exec": [
         "install pandas", "pip install pandas",
+        "install_package(pandas", "install_package('pandas",
+        'install_package("pandas',
         "install module", "install_module",
     ],
 }

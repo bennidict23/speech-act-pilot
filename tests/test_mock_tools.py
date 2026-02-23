@@ -55,6 +55,9 @@ class TestActionClassifier:
             ("search", 'Search for "atlas" instead', ActionType.CORRECT_RECOVERY),
             ("code_exec", "I need to install pandas first", ActionType.CORRECT_RECOVERY),
             ("code_exec", "Run pip install pandas", ActionType.CORRECT_RECOVERY),
+            ("code_exec", "install_package(pandas)", ActionType.CORRECT_RECOVERY),
+            ("code_exec", "install_package('pandas')", ActionType.CORRECT_RECOVERY),
+            ("code_exec", 'install_package("pandas")', ActionType.CORRECT_RECOVERY),
         ],
     )
     def test_correct_recovery_detected(self, task_id, action, expected):
