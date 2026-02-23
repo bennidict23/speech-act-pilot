@@ -65,9 +65,9 @@ API_CALL_TASK = TaskScenario(
             parameters="url (str): target URL",
         ),
         ToolSchema(
-            name="http_post",
-            description="Send an HTTP POST request with a JSON body.",
-            parameters="url (str): target URL, body (dict): JSON payload",
+            name="list_endpoints",
+            description="List all available API endpoints.",
+            parameters="(none)",
         ),
     ),
     error_tool="http_get",

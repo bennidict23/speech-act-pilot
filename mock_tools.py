@@ -33,6 +33,7 @@ class ErrorState:
 class ToolStatus(Enum):
     ERROR = "error"
     SUCCESS = "success"
+    INFO = "info"  # Intermediate discovery response (not styled)
     EXHAUSTED = "exhausted"
 
 
@@ -215,6 +216,48 @@ def _success_message(task_id: str) -> str:
     return messages.get(task_id, "Action completed successfully.")
 
 
+# Per-task patterns that trigger intermediate discovery responses.
+# These let the agent explore without triggering the styled error.
+# Responses are neutral (identical across all styles) — only the error
+# feedback varies by condition.
+_DISCOVERY_PATTERNS: dict[str, list[tuple[str, str]]] = {
+    "file_write": [
+        (
+            "list_dirs",
+            "Contents:\n"
+            "  /data/reports/  (read-only)\n"
+            "  /tmp/reports/   (writable)",
+        ),
+    ],
+    "api_call": [
+        (
+            "list_endpoints",
+            "Available endpoints:\n"
+            "  /api/v1/users/{id}  (deprecated, removed)\n"
+            "  /api/v2/users/{id}  (active)",
+        ),
+    ],
+    "search": [
+        (
+            "list_documents",
+            "Documents in store:\n"
+            "  1. 'Project Atlas - Overview' (tags: atlas, planning)\n"
+            "  2. 'Q3 Budget Report' (tags: finance, quarterly)\n"
+            "  3. 'Team Roster 2024' (tags: hr, team)",
+        ),
+    ],
+}
+
+
+def _check_discovery(action_text: str, task_id: str) -> str | None:
+    """Check if action matches a discovery pattern. Returns response or None."""
+    lower = action_text.lower()
+    for pattern, response in _DISCOVERY_PATTERNS.get(task_id, []):
+        if pattern in lower:
+            return response
+    return None
+
+
 class ToolSession:
     """Mutable session state for a single tool interaction.
 
@@ -252,6 +295,14 @@ class ToolSession:
             return ToolResponse(
                 status=ToolStatus.SUCCESS,
                 message=_success_message(self._tool.task_id),
+            )
+
+        # Check for discovery/exploration actions (neutral, not styled)
+        discovery_msg = _check_discovery(action_text, self._tool.task_id)
+        if discovery_msg is not None:
+            return ToolResponse(
+                status=ToolStatus.INFO,
+                message=discovery_msg,
             )
 
         return ToolResponse(

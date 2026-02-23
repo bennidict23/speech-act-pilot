@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from agent import build_system_prompt, parse_react_output
+from agent import build_system_prompt, parse_react_output, validate_tool
 from mock_tools import ActionType, classify_action
 from tasks import TASK_SCENARIOS
 
@@ -211,3 +211,48 @@ class TestSystemPrompt:
         prompt = build_system_prompt(task)
         assert "Thought:" in prompt
         assert "Action:" in prompt
+
+    def test_instructs_no_print_return(self):
+        task = TASK_SCENARIOS["file_write"]
+        prompt = build_system_prompt(task).lower()
+        assert "print" in prompt
+        assert "return" in prompt
+
+
+# ---------------------------------------------------------------------------
+# Tool validation
+# ---------------------------------------------------------------------------
+
+
+class TestValidateTool:
+    """Tool validation rejects invalid tools with neutral messages."""
+
+    def test_valid_tool_returns_none(self):
+        task = TASK_SCENARIOS["file_write"]
+        assert validate_tool("write_file('/tmp/reports/Q1.txt')", task) is None
+
+    def test_valid_tool_list_dirs(self):
+        task = TASK_SCENARIOS["file_write"]
+        assert validate_tool("list_dirs('/data/')", task) is None
+
+    def test_invalid_tool_returns_message(self):
+        task = TASK_SCENARIOS["file_write"]
+        result = validate_tool("print('hello')", task)
+        assert result is not None
+        assert "print" in result
+        assert "write_file" in result or "list_dirs" in result
+
+    def test_return_statement_rejected(self):
+        task = TASK_SCENARIOS["api_call"]
+        result = validate_tool('return "not found"', task)
+        assert result is not None
+        assert "Available tools" in result
+
+    def test_message_is_neutral(self):
+        """Validation messages must not contain style information."""
+        task = TASK_SCENARIOS["api_call"]
+        result = validate_tool("print('error')", task)
+        assert result is not None
+        for keyword in ["diagnostic", "directive", "suggestive",
+                        "accusatory", "speech_act"]:
+            assert keyword not in result.lower()
