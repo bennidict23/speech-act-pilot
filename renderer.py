@@ -178,20 +178,20 @@ B2_TEMPLATES: dict[SpeechStyle, str] = {
     SpeechStyle.DIRECTIVE: (
         "ALERT: error {error_code}, {error_type} on {resource}. "
         "{details}. "
-        "Do NOT repeat the failing action. "
+        "You are required to resolve this immediately. "
         "This is {retryable_text}."
     ),
     SpeechStyle.SUGGESTIVE: (
         "It seems there may be an issue: error {error_code}, "
         "{error_type} involving {resource}. "
         "{details}. "
-        "Perhaps this is {retryable_text}."
+        "Retryable: {retryable}."
     ),
     SpeechStyle.ACCUSATORY: (
         "Your action caused error {error_code}, "
         "{error_type} on {resource}. "
         "{details}. "
-        "You should have anticipated this. "
+        "This outcome reflects the action you chose. "
         "Retryable: {retryable}."
     ),
 }

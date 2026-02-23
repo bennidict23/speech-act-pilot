@@ -139,12 +139,12 @@ _RECOVERY_PATTERNS: dict[str, list[str]] = {
         "widen", "broader",
     ],
     "code_exec": [
-        "install pandas", "pip install", "install module",
-        "install_module", "install package",
+        "install pandas", "pip install pandas",
+        "install module", "install_module",
     ],
 }
 
-_GIVE_UP_KEYWORDS = ["give up", "cannot", "impossible", "abort", "give_up"]
+_GIVE_UP_KEYWORDS = ["give up", "impossible", "abort", "give_up", "i surrender"]
 _ASK_USER_KEYWORDS = ["ask user", "ask_user", "need help", "request assistance"]
 _SWITCH_TOOL_KEYWORDS = ["switch tool", "different tool", "use_tool", "alternative tool"]
 _RETRY_KEYWORDS = ["retry", "try again", "same action", "repeat"]

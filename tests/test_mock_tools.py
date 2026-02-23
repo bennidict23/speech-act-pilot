@@ -66,7 +66,7 @@ class TestActionClassifier:
             ("Let me retry the same action", ActionType.RETRY),
             ("Try again with the same parameters", ActionType.RETRY),
             ("I give up, this is impossible", ActionType.GIVE_UP),
-            ("Cannot proceed, aborting", ActionType.GIVE_UP),
+            ("This task is impossible, I abort", ActionType.GIVE_UP),
             ("I need to ask user for help", ActionType.ASK_USER),
             ("Let me switch to a different tool", ActionType.SWITCH_TOOL),
         ],
@@ -77,6 +77,16 @@ class TestActionClassifier:
     def test_unknown_action(self):
         result = classify_action("hmm let me think about this", "file_write")
         assert result == ActionType.UNKNOWN
+
+    def test_cannot_is_not_give_up(self):
+        """'cannot' is too common in LLM reasoning to be a give_up signal."""
+        result = classify_action("I cannot write to that path", "file_write")
+        assert result != ActionType.GIVE_UP
+
+    def test_generic_pip_install_is_not_recovery(self):
+        """'pip install X' for non-pandas should not trigger code_exec recovery."""
+        result = classify_action("pip install numpy", "code_exec")
+        assert result != ActionType.CORRECT_RECOVERY
 
     def test_correct_recovery_takes_priority(self):
         """If action matches both recovery and generic, recovery wins."""
