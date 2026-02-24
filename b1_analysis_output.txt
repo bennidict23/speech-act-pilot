@@ -1,0 +1,64 @@
+
+Total records: 500
+
+============================================================
+Recovery Rate by Style
+============================================================
+  neutral       83.0%  [0.745, 0.891]  (83/100)
+  diagnostic    82.0%  [0.733, 0.883]  (82/100)
+  directive     81.0%  [0.722, 0.875]  (81/100)
+  suggestive    77.0%  [0.678, 0.842]  (77/100)
+  accusatory    84.0%  [0.756, 0.899]  (84/100)
+
+============================================================
+Chi-Square Test (5 styles)
+============================================================
+  chi2 = 1.9286,  p = 0.748887,  dof = 4
+  Cramer's V = 0.0621
+  Not significant (p > 0.10)
+
+============================================================
+Pairwise Fisher Exact (vs Neutral, Bonferroni corrected)
+============================================================
+  diagnostic    OR= 0.933  p_raw=1.0000  p_corrected=1.0000
+  directive     OR= 0.873  p_raw=0.8542  p_corrected=1.0000
+  suggestive    OR= 0.686  p_raw=0.3769  p_corrected=1.0000
+  accusatory    OR= 1.075  p_raw=1.0000  p_corrected=1.0000
+
+============================================================
+Mean Steps to Recovery (recovered runs only)
+============================================================
+  neutral       mean=1.63  SE=0.09  n=83
+  diagnostic    mean=1.57  SE=0.07  n=82
+  directive     mean=1.52  SE=0.06  n=81
+  suggestive    mean=1.52  SE=0.07  n=77
+  accusatory    mean=1.58  SE=0.07  n=84
+
+============================================================
+Loop Rate by Style (runs with consecutive retries)
+============================================================
+  neutral        0.0%
+  diagnostic     0.0%
+  directive      0.0%
+  suggestive     0.0%
+  accusatory     0.0%
+
+============================================================
+Action Type Distribution
+============================================================
+  style         correct_recovery  unknown         
+  neutral                27.2%             72.8%  
+  diagnostic             26.5%             73.5%  
+  directive              25.9%             74.1%  
+  suggestive             22.2%             77.8%  
+  accusatory             28.7%             71.3%  
+
+============================================================
+Per-Task Recovery Rate Breakdown
+============================================================
+  task             neutral       diagnostic    directive     suggestive    accusatory  
+  api_call         100.0%        100.0%        100.0%        95.0%         100.0%      
+  code_exec        100.0%        100.0%        100.0%        100.0%        100.0%      
+  db_query         100.0%        100.0%        100.0%        100.0%        100.0%      
+  file_write       95.0%         100.0%        100.0%        85.0%         100.0%      
+  search           20.0%         10.0%         5.0%          5.0%          20.0%       
